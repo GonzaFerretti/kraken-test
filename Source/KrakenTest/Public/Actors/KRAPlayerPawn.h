@@ -46,4 +46,7 @@ protected:
 private:
 	UPROPERTY(Transient)
 	AActor* CurrentProjectile;
+
+	UPROPERTY(Transient)
+	float LastTimeShot = -1.0f;
 };

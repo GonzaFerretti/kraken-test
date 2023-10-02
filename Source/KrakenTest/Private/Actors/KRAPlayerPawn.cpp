@@ -24,8 +24,14 @@ void AKRAPlayerPawn::Fire()
 	{
 		return;
 	}
+
+	if (GetWorld()->GetTimeSeconds() < LastTimeShot + FireRate)
+	{
+		return;
+	}
+
+	LastTimeShot = GetWorld()->GetTimeSeconds();
 	
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Fire"));
 	const FTransform& FireTransform = GetFireTransform();
 
 	if (ProjectileClass)
@@ -33,13 +39,14 @@ void AKRAPlayerPawn::Fire()
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Instigator = this;
 		SpawnParams.Owner = this;
+		
 		CurrentProjectile = GetWorld()->SpawnActor(ProjectileClass, &FireTransform, SpawnParams);
-		CurrentProjectile->SetLifeSpan(1.0f);
 	}
 }
 
 void AKRAPlayerPawn::MoveHorizontal(const FInputActionValue& InputActionValue)
 {
+	// Input vectors are consumed and cleared every frame so we don't need to worry about speeds or normalizing them by frame time.
 	MovementComponent->AddInputVector(FVector::RightVector * InputActionValue.GetMagnitude());
 }
 
