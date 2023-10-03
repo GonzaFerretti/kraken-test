@@ -15,7 +15,21 @@ public:
 	AKRAAlienSwarm();
 
 protected:
+	UFUNCTION()
+	void HandleAlienDestroyed(AActor* DestroyedActor);
+	
+	UFUNCTION()
+	void HandleBorderReached(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	void UpdateSpeed();
+	void UpdateBorderCollider();
+
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
+
+	UPROPERTY(VisibleAnywhere)
+	class UBoxComponent* BorderCollision;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> AlienClass;
@@ -26,9 +40,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	FVector2D AlienDistance;
 
-	UPROPERTY(EditDefaultsOnly)
-	float InitialSpeed;
+	UPROPERTY(EditAnywhere)
+	FRuntimeFloatCurve AlienSpeedCurve;
+	
+	UPROPERTY(EditAnywhere)
+	float MaxSpeed;
 
+	UPROPERTY(EditAnywhere)
+	float MinSpeed;
+	
 	UPROPERTY(VisibleAnywhere)
-	TMap<FVector2D, AActor*> CurrentSwarm; 
+	TMap<FVector2D, AActor*> CurrentSwarm;
+
+	UPROPERTY(BlueprintReadOnly)
+	float CurrentSpeed;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	FVector CurrentDirection = FVector();
+
 };

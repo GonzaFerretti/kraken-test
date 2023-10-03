@@ -25,6 +25,7 @@ void AKRAPlayerPawn::Fire()
 		return;
 	}
 
+    // I also added a firerate so you can't insta-destroy your own barriers by mistake if you framerate is high enough.
 	if (GetWorld()->GetTimeSeconds() < LastTimeShot + FireRate)
 	{
 		return;

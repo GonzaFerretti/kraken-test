@@ -12,6 +12,6 @@ class KRAKENTEST_API AKRAAlien : public AActor, public IKRADamageableInterface
 {
 	GENERATED_BODY()
 
-public:
+public:	
 	void ApplyDamage(const FKRADamageEvent& DamageEvent) override;
 };
