@@ -14,4 +14,6 @@ class KRAKENTEST_API AKRAAlien : public AActor, public IKRADamageableInterface
 
 public:	
 	void ApplyDamage(const FKRADamageEvent& DamageEvent) override;
+
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };

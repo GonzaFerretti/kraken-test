@@ -10,7 +10,7 @@ void UKRAHealthComponent::ReceiveDamage(const FKRADamageEvent& DamageEvent)
 	const int32 PreviousHealth = Health;
 	Health -= DamageEvent.Damage;
 	OnDamageReceived.Broadcast(Health, PreviousHealth, MaxHealth);
-	if (Health == 0)
+	if (Health <= 0)
 	{
 		OnHealthDropToZero.Broadcast();
 		if (bDestroyOwnerOnZeroHealth)

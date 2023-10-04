@@ -19,7 +19,7 @@ protected:
 	void HandleAlienDestroyed(AActor* DestroyedActor);
 	
 	UFUNCTION()
-	void HandleBorderReached(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void HandleOverlapWithSideWall(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	void UpdateSpeed();
 	void UpdateBorderCollider();

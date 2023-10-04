@@ -104,7 +104,7 @@ void AKRAAlienSwarm::HandleAlienDestroyed(AActor* DestroyedActor)
 	UpdateSpeed();
 }
 
-void AKRAAlienSwarm::HandleBorderReached(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AKRAAlienSwarm::HandleOverlapWithSideWall(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	CurrentDirection *= -1;
 
@@ -145,7 +145,7 @@ void AKRAAlienSwarm::BeginPlay()
 	UpdateSpeed();
 	UpdateBorderCollider();
 	
-	BorderCollision->OnComponentBeginOverlap.AddUniqueDynamic(this, &AKRAAlienSwarm::HandleBorderReached);
+	BorderCollision->OnComponentBeginOverlap.AddUniqueDynamic(this, &AKRAAlienSwarm::HandleOverlapWithSideWall);
 
 	StartFireCycle();
 }
