@@ -13,17 +13,16 @@ class KRAKENTEST_API AKRAWall : public AActor, public IKRADamageableInterface
 	GENERATED_BODY()
 
 public:
+	AKRAWall();
+	
 	virtual void ApplyDamage(const FKRADamageEvent& DamageEvent) override;
 
 protected:
+	UPROPERTY(VisibleAnywhere)
+	class UKRAHealthComponent* HealthComponent;
+	
 	virtual void BeginPlay() override;
 	
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnDamageReceived(int32 PreviousHealth);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 MaxHealth;
-	
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-	int32 Health;
+	void OnDamageReceived(int32 CurrentHealth, int32 PreviousHealth, int32 MaxHealth);
 };

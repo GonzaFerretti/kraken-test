@@ -3,6 +3,8 @@
 #include "Actors/KRAPlayerPawn.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/KRAFireComponent.h"
+#include "Components/KRAHealthComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
 
 AKRAPlayerPawn::AKRAPlayerPawn()
@@ -15,34 +17,16 @@ AKRAPlayerPawn::AKRAPlayerPawn()
 	// This constraints our movement to the XY plane.
 	MovementComponent->bConstrainToPlane = true;
 	MovementComponent->SetPlaneConstraintNormal(FVector::ForwardVector);
+
+	FireComponent = CreateDefaultSubobject<UKRAFireComponent>(TEXT("FireComponent"));
+	HealthComponent = CreateDefaultSubobject<UKRAHealthComponent>(TEXT("HealthComponent"));
 }
 
-void AKRAPlayerPawn::Fire()
+void AKRAPlayerPawn::BeginPlay()
 {
-	// In classic Space Invaders, you can only have one player projectile at the same time.
-  	if (IsValid(CurrentProjectile))
-	{
-		return;
-	}
+	Super::BeginPlay();
 
-    // I also added a firerate so you can't insta-destroy your own barriers by mistake if you framerate is high enough.
-	if (GetWorld()->GetTimeSeconds() < LastTimeShot + FireRate)
-	{
-		return;
-	}
-
-	LastTimeShot = GetWorld()->GetTimeSeconds();
-	
-	const FTransform& FireTransform = GetFireTransform();
-
-	if (ProjectileClass)
-	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Instigator = this;
-		SpawnParams.Owner = this;
-		
-		CurrentProjectile = GetWorld()->SpawnActor(ProjectileClass, &FireTransform, SpawnParams);
-	}
+	HealthComponent->OnDamageReceived.AddUniqueDynamic(this, &ThisClass::OnDamageReceived);
 }
 
 void AKRAPlayerPawn::MoveHorizontal(const FInputActionValue& InputActionValue)
@@ -68,6 +52,16 @@ void AKRAPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 
 	EnhancedInputComponent->BindAction(HorizontalMovementInputAction, ETriggerEvent::Triggered, this, &ThisClass::MoveHorizontal);
-	EnhancedInputComponent->BindAction(FireInputAction, ETriggerEvent::Triggered, this, &ThisClass::Fire);	
+	EnhancedInputComponent->BindAction(FireInputAction, ETriggerEvent::Triggered, this, &ThisClass::TriggerFire);	
+}
+
+void AKRAPlayerPawn::ApplyDamage(const FKRADamageEvent& DamageEvent)
+{
+	HealthComponent->ReceiveDamage(DamageEvent);
+}
+
+void AKRAPlayerPawn::TriggerFire()
+{
+	FireComponent->Fire(GetFireTransform());
 }
 

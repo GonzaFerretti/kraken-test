@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "KRADamageableInterface.generated.h"
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FKRADamageEvent
 {
 	GENERATED_BODY()

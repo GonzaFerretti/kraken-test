@@ -5,6 +5,7 @@
 
 #include "Actors/KRAAlien.h"
 #include "Components/BoxComponent.h"
+#include "Components/KRAFireComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 AKRAAlienSwarm::AKRAAlienSwarm()
@@ -13,6 +14,8 @@ AKRAAlienSwarm::AKRAAlienSwarm()
 	PrimaryActorTick.bCanEverTick = true;
 
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent")));
+	
+	FireComponent = CreateDefaultSubobject<UKRAFireComponent>(TEXT("FireComponent"));
 
 	BorderCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BorderCollision"));
 	BorderCollision->SetupAttachment(RootComponent);
@@ -41,6 +44,49 @@ void AKRAAlienSwarm::UpdateBorderCollider()
 
 	BorderCollision->SetBoxExtent(Extent);
 	BorderCollision->SetWorldLocation(Center);
+}
+
+void AKRAAlienSwarm::StartFireCycle()
+{
+	FTimerHandle Handle;
+	FTimerDelegate Delegate;
+	Delegate.BindUObject(this, &AKRAAlienSwarm::Fire);
+
+	// We emulate a player firing everytime we can given the fire rate.
+	GetWorld()->GetTimerManager().SetTimer(Handle, Delegate, FireComponent->FireRate, true, 0.0f);
+}
+
+void AKRAAlienSwarm::Fire()
+{
+	TMap<int32, int32> PossibleAliensToFireFrom;
+	for (const TTuple<UE::Math::TVector2<double>, AActor*>& SwarmElement : CurrentSwarm)
+	{
+		const float Column = SwarmElement.Key.X;
+		int* BestRowForColumn = PossibleAliensToFireFrom.Find(Column);
+		if (!BestRowForColumn)
+		{
+			BestRowForColumn = &PossibleAliensToFireFrom.Add(Column);
+			*BestRowForColumn = TNumericLimits<int32>().Max();
+		}
+		
+		*BestRowForColumn = FMath::Min(*BestRowForColumn, SwarmElement.Key.Y); 
+	}
+	
+	if (PossibleAliensToFireFrom.Num() > 0)
+	{
+		TArray<int32> PossibleColumns;
+		PossibleAliensToFireFrom.GetKeys(PossibleColumns);
+		
+		const int32 ColumnIndex = FMath::RandRange(0, PossibleColumns.Num() - 1);
+		const int32 Column = PossibleColumns[ColumnIndex];
+		const int32 Row = PossibleAliensToFireFrom[Column];
+
+		const AActor* Alien = CurrentSwarm[FVector2D(Column, Row)];
+
+		const FTransform FireTransform(FVector::DownVector.ToOrientationRotator(), Alien->GetActorLocation(), FVector::One());
+		
+		FireComponent->Fire(FireTransform);
+	}
 }
 
 void AKRAAlienSwarm::HandleAlienDestroyed(AActor* DestroyedActor)
@@ -85,8 +131,8 @@ void AKRAAlienSwarm::BeginPlay()
 		{
 			const FVector LocalPosition(0.0f, AlienDistance.X * Column, AlienDistance.Y * Row);
 			AKRAAlien* Alien = GetWorld()->SpawnActor<AKRAAlien>(AlienClass, InitialTransform, AlienSpawnParams);
+			Alien->SetActorLabel(FString::Printf(TEXT("Alien(%d,%d)"), Column, Row));
 			CurrentSwarm.Add(FVector2D(Column, Row), Alien);
-			
 			Alien->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 			const FVector CenteredPosition = LocalPosition - SwarmLocalHalfSize;
@@ -100,6 +146,8 @@ void AKRAAlienSwarm::BeginPlay()
 	UpdateBorderCollider();
 	
 	BorderCollision->OnComponentBeginOverlap.AddUniqueDynamic(this, &AKRAAlienSwarm::HandleBorderReached);
+
+	StartFireCycle();
 }
 
 void AKRAAlienSwarm::Tick(float DeltaSeconds)

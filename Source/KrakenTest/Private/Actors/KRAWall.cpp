@@ -3,21 +3,22 @@
 
 #include "Actors/KRAWall.h"
 
+#include "Components/KRAHealthComponent.h"
+
+AKRAWall::AKRAWall()
+{
+	HealthComponent = CreateDefaultSubobject<UKRAHealthComponent>(TEXT("HealthComponent"));
+	HealthComponent->bDestroyOwnerOnZeroHealth = true;
+}
 
 void AKRAWall::ApplyDamage(const FKRADamageEvent& DamageEvent)
 {
-	const int32 PreviousHealth = Health;
-	Health -= DamageEvent.Damage;
-	OnDamageReceived(PreviousHealth);
-	if (Health == 0)
-	{
-		Destroy();
-	}
+	HealthComponent->ReceiveDamage(DamageEvent);
 }
 
 void AKRAWall::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Health = MaxHealth;
+	HealthComponent->OnDamageReceived.AddUniqueDynamic(this, &ThisClass::OnDamageReceived);
 }

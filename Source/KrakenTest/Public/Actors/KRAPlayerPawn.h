@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "InputAction.h"
 #include "GameFramework/Pawn.h"
+#include "Interfaces/KRADamageableInterface.h"
 #include "KRAPlayerPawn.generated.h"
 
 UCLASS()
-class KRAKENTEST_API AKRAPlayerPawn : public APawn
+class KRAKENTEST_API AKRAPlayerPawn : public APawn, public IKRADamageableInterface
 {
 	GENERATED_BODY()
 
@@ -17,13 +18,17 @@ public:
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void ApplyDamage(const FKRADamageEvent& DamageEvent) override;
+
 protected:
+	virtual void BeginPlay() override;
 
-	void Fire();
+	void TriggerFire();
+	
 	void MoveHorizontal(const FInputActionValue& InputActionValue);
-
-	UPROPERTY(VisibleAnywhere)
-	class UFloatingPawnMovement* MovementComponent;
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnDamageReceived(int32 CurrentHealth, int32 PreviousHealth, int32 MaxHealth);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	FTransform GetFireTransform() const;
@@ -42,7 +47,16 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> ProjectileClass;
+	
+	UPROPERTY(VisibleAnywhere)
+	class UFloatingPawnMovement* MovementComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	class UKRAFireComponent* FireComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	class UKRAHealthComponent* HealthComponent;
+	
 private:
 	UPROPERTY(Transient)
 	AActor* CurrentProjectile;

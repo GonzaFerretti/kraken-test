@@ -23,6 +23,10 @@ protected:
 
 	void UpdateSpeed();
 	void UpdateBorderCollider();
+	void StartFireCycle();
+
+	UFUNCTION()
+	void Fire();
 
 	virtual void BeginPlay() override;
 
@@ -30,6 +34,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* BorderCollision;
+
+	UPROPERTY(VisibleAnywhere)
+	class UKRAFireComponent* FireComponent;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> AlienClass;
