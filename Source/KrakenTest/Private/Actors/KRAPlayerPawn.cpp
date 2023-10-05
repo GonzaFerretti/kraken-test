@@ -3,6 +3,7 @@
 #include "Actors/KRAPlayerPawn.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Actors/KRACrystalDrop.h"
 #include "Components/KRAFireComponent.h"
 #include "Components/KRAHealthComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
@@ -58,6 +59,17 @@ void AKRAPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 void AKRAPlayerPawn::ApplyDamage(const FKRADamageEvent& DamageEvent)
 {
 	HealthComponent->ReceiveDamage(DamageEvent);
+}
+
+void AKRAPlayerPawn::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorBeginOverlap(OtherActor);
+
+	if (OtherActor->IsA<AKRACrystalDrop>())
+	{
+		++CrystalCount;
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("%d"), CrystalCount));
+	}
 }
 
 void AKRAPlayerPawn::TriggerFire()

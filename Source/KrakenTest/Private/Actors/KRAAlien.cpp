@@ -5,6 +5,13 @@
 
 void AKRAAlien::ApplyDamage(const FKRADamageEvent& DamageEvent)
 {
+	if (FMath::RandRange(0.0f, 100.0f) > DropChance)
+	{
+		FTransform DropTransform = GetActorTransform();
+		DropTransform.SetScale3D(FVector::One());
+		GetWorld()->SpawnActor(Drop, &DropTransform);
+	}
+	
 	Destroy();
 }
 

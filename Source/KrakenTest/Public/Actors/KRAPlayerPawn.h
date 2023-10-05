@@ -19,6 +19,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void ApplyDamage(const FKRADamageEvent& DamageEvent) override;
+	
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -63,4 +65,7 @@ private:
 
 	UPROPERTY(Transient)
 	float LastTimeShot = -1.0f;
+	
+	UPROPERTY(VisibleAnywhere)
+	int32 CrystalCount = 0;
 };
