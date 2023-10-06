@@ -52,7 +52,7 @@ void UKRATimelineComponent::TickComponent(float DeltaTime, ELevelTick TickType,	
 			return;
 		}
 
-		float Alpha = (ReverseTimeTimestamp - NextEvent->Data->Timestamp) / (PreviousEvent->Data->Timestamp - NextEvent->Data->Timestamp); 
+		const float Alpha = (ReverseTimeTimestamp - NextEvent->Data->Timestamp) / (PreviousEvent->Data->Timestamp - NextEvent->Data->Timestamp); 
 		TimelineOwner->TickReverse(*NextEvent, *PreviousEvent, Alpha);
 	}
 }

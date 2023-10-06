@@ -131,7 +131,7 @@ void AKRAAlienSwarm::HandleAlienDestroyed(AActor* DestroyedActor)
 	{
 		if (SwarmElement.Value == DestroyedActor)
 		{
-			CurrentSwarm.Remove(SwarmElement.Key);
+    			CurrentSwarm.Remove(SwarmElement.Key);
 			break;
 		}
 	}
@@ -203,9 +203,9 @@ void AKRAAlienSwarm::Tick(float DeltaSeconds)
 void AKRAAlienSwarm::TickReverse(const FKRATimelineEvent& NextEvent, const FKRATimelineEvent& PreviousEvent, float Alpha)
 {
 	const FKRAAlienSwarmTimelineData* PreviousData = PreviousEvent.GetDataAs<FKRAAlienSwarmTimelineData>();
-	const FKRAAlienSwarmTimelineData* NextData = PreviousEvent.GetDataAs<FKRAAlienSwarmTimelineData>();
+	const FKRAAlienSwarmTimelineData* NextData = NextEvent.GetDataAs<FKRAAlienSwarmTimelineData>();
 	
-	const FVector Position = FMath::Lerp(PreviousData->Position, NextData->Position, Alpha);
+	const FVector Position = FMath::Lerp(PreviousData->Position, NextData->Position, 1 - Alpha);
 	SetActorLocation(Position);
 
 	const bool bNextDataCreatesAliens = PreviousData->AliveAlienCoordinates.Num() != NextData->AliveAlienCoordinates.Num();
