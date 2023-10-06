@@ -35,6 +35,9 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	FTransform GetFireTransform() const;
 
+	UPROPERTY(EditDefaultsOnly, Instanced)
+	TArray<class UKRACrystalAction*> CrystalActions;
+
 	UPROPERTY(EditDefaultsOnly)
 	UInputAction* HorizontalMovementInputAction;
 
@@ -60,6 +63,8 @@ protected:
 	class UKRAHealthComponent* HealthComponent;
 	
 private:
+	friend class UKRACrystalAction;
+	
 	UPROPERTY(Transient)
 	AActor* CurrentProjectile;
 

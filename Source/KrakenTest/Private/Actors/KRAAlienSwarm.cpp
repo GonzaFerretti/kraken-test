@@ -10,7 +10,6 @@
 
 AKRAAlienSwarm::AKRAAlienSwarm()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent")));
@@ -19,6 +18,8 @@ AKRAAlienSwarm::AKRAAlienSwarm()
 
 	BorderCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BorderCollision"));
 	BorderCollision->SetupAttachment(RootComponent);
+
+	TimelineComponent = CreateDefaultSubobject<UKRATimelineComponent>(TEXT("TimelineComponent"));
 }
 
 void AKRAAlienSwarm::UpdateSpeed()
@@ -48,12 +49,11 @@ void AKRAAlienSwarm::UpdateBorderCollider()
 
 void AKRAAlienSwarm::StartFireCycle()
 {
-	FTimerHandle Handle;
 	FTimerDelegate Delegate;
 	Delegate.BindUObject(this, &AKRAAlienSwarm::Fire);
 
 	// We emulate a player firing everytime we can given the fire rate.
-	GetWorld()->GetTimerManager().SetTimer(Handle, Delegate, FireComponent->FireRate, true, 0.0f);
+	GetWorld()->GetTimerManager().SetTimer(FiringHandle, Delegate, FireComponent->FireRate, true, 0.0f);
 }
 
 void AKRAAlienSwarm::Fire()
@@ -89,6 +89,42 @@ void AKRAAlienSwarm::Fire()
 	}
 }
 
+FKRATimelineEvent AKRAAlienSwarm::GetCurrentTimelineData() const
+{
+	FKRAAlienSwarmTimelineData TimelineData;
+
+	TimelineData.Timestamp = GetWorld()->GetTimeSeconds();
+	for (const TTuple<UE::Math::TVector2<double>, AActor*>& SwarmElement : CurrentSwarm)
+	{
+		TimelineData.AliveAlienCoordinates.Add(SwarmElement.Key);
+	}
+
+	TimelineData.Position = GetActorLocation();
+
+	return FKRATimelineEvent(TimelineData);
+}
+
+void AKRAAlienSwarm::SetTickMode(EKRATimelineTickMode InTickMode)
+{
+	switch (InTickMode)
+	{
+	case EKRATimelineTickMode::Forward:
+		SetActorTickEnabled(true);
+		StartFireCycle();
+		break;
+
+	case EKRATimelineTickMode::Reverse:
+		SetActorTickEnabled(false);
+		GetWorld()->GetTimerManager().ClearTimer(FiringHandle);
+		break;
+	}
+}
+
+UKRATimelineComponent* AKRAAlienSwarm::GetTimelineComponent() const
+{
+	return TimelineComponent;
+}
+
 void AKRAAlienSwarm::HandleAlienDestroyed(AActor* DestroyedActor)
 {
 	for (const TTuple<UE::Math::TVector2<double>, AActor*>& SwarmElement : CurrentSwarm)
@@ -120,25 +156,14 @@ void AKRAAlienSwarm::BeginPlay()
 
 	FActorSpawnParameters AlienSpawnParams;
 	AlienSpawnParams.Owner = this;
-	const FTransform InitialTransform;
-
 	const FVector2D SwarmSpaceCount(FMath::Max(0, SwarmSize.X - 1), FMath::Max(0, SwarmSize.Y - 1));
-	const FVector SwarmLocalHalfSize = FVector(0.0f, AlienDistance.X * SwarmSpaceCount.X, AlienDistance.Y * SwarmSpaceCount.Y) / 2;  
+	SwarmLocalHalfSize = FVector(0.0f, AlienDistance.X * SwarmSpaceCount.X, AlienDistance.Y * SwarmSpaceCount.Y) / 2;  
 
 	for (int32 Column = 0; Column < SwarmSize.X; ++Column)
 	{
 		for (int32 Row = 0; Row < SwarmSize.Y; ++Row)
 		{
-			const FVector LocalPosition(0.0f, AlienDistance.X * Column, AlienDistance.Y * Row);
-			AKRAAlien* Alien = GetWorld()->SpawnActor<AKRAAlien>(AlienClass, InitialTransform, AlienSpawnParams);
-			Alien->SetActorLabel(FString::Printf(TEXT("Alien(%d,%d)"), Column, Row));
-			CurrentSwarm.Add(FVector2D(Column, Row), Alien);
-			Alien->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
-			const FVector CenteredPosition = LocalPosition - SwarmLocalHalfSize;
-			Alien->SetActorRelativeLocation(CenteredPosition);
-
-			Alien->OnDestroyed.AddUniqueDynamic(this, &AKRAAlienSwarm::HandleAlienDestroyed);
+			CreateAlien(Column, Row);
 		}
 	}
 
@@ -150,11 +175,50 @@ void AKRAAlienSwarm::BeginPlay()
 	StartFireCycle();
 }
 
+void AKRAAlienSwarm::CreateAlien(int32 Column, int32 Row)
+{
+	FActorSpawnParameters AlienSpawnParams;
+	AlienSpawnParams.Owner = this;
+	
+	const FVector LocalPosition(0.0f, AlienDistance.X * Column, AlienDistance.Y * Row);
+	AKRAAlien* Alien = GetWorld()->SpawnActor<AKRAAlien>(AlienClass, FTransform(), AlienSpawnParams);
+	Alien->SetActorLabel(FString::Printf(TEXT("Alien(%d,%d)"), Column, Row));
+	CurrentSwarm.Add(FVector2D(Column, Row), Alien);
+	Alien->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+	const FVector CenteredPosition = LocalPosition - SwarmLocalHalfSize;
+	Alien->SetActorRelativeLocation(CenteredPosition);
+
+	Alien->OnDestroyed.AddUniqueDynamic(this, &AKRAAlienSwarm::HandleAlienDestroyed);
+}
+
 void AKRAAlienSwarm::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
 	const FVector NewLocation = GetActorLocation() + (DeltaSeconds * CurrentSpeed) * CurrentDirection;
 	SetActorLocation(NewLocation);
+}
+
+void AKRAAlienSwarm::TickReverse(const FKRATimelineEvent& NextEvent, const FKRATimelineEvent& PreviousEvent, float Alpha)
+{
+	const FKRAAlienSwarmTimelineData* PreviousData = PreviousEvent.GetDataAs<FKRAAlienSwarmTimelineData>();
+	const FKRAAlienSwarmTimelineData* NextData = PreviousEvent.GetDataAs<FKRAAlienSwarmTimelineData>();
+	
+	const FVector Position = FMath::Lerp(PreviousData->Position, NextData->Position, Alpha);
+	SetActorLocation(Position);
+
+	const bool bNextDataCreatesAliens = PreviousData->AliveAlienCoordinates.Num() != NextData->AliveAlienCoordinates.Num();
+	const bool bAliensNotCreatedYet = NextData->AliveAlienCoordinates.Num() != CurrentSwarm.Num();
+	if (bNextDataCreatesAliens && bAliensNotCreatedYet)
+	{
+		for (const FVector2d& Coordinate : NextData->AliveAlienCoordinates)
+		{
+			if (!CurrentSwarm.Contains(Coordinate))
+			{
+				CreateAlien(Coordinate);
+			}
+		}
+	}
 }
 

@@ -3,6 +3,7 @@
 #include "Actors/KRAPlayerPawn.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Actions/KRACrystalAction.h"
 #include "Actors/KRACrystalDrop.h"
 #include "Components/KRAFireComponent.h"
 #include "Components/KRAHealthComponent.h"
@@ -53,7 +54,12 @@ void AKRAPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 
 	EnhancedInputComponent->BindAction(HorizontalMovementInputAction, ETriggerEvent::Triggered, this, &ThisClass::MoveHorizontal);
-	EnhancedInputComponent->BindAction(FireInputAction, ETriggerEvent::Triggered, this, &ThisClass::TriggerFire);	
+	EnhancedInputComponent->BindAction(FireInputAction, ETriggerEvent::Triggered, this, &ThisClass::TriggerFire);
+
+	for (UKRACrystalAction* CrystalAction : CrystalActions)
+	{
+		CrystalAction->Initialize(EnhancedInputComponent, this);
+	}
 }
 
 void AKRAPlayerPawn::ApplyDamage(const FKRADamageEvent& DamageEvent)

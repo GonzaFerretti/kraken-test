@@ -3,16 +3,30 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/KRATimelineComponent.h"
 #include "GameFramework/Actor.h"
+#include "Interfaces/KRATimelineInterface.h"
 #include "KRAAlienSwarm.generated.h"
 
+struct FKRAAlienSwarmTimelineData : FKRATimelineEventData
+{
+	TArray<FVector2d> AliveAlienCoordinates;
+	FVector Position;
+};
+
 UCLASS()
-class KRAKENTEST_API AKRAAlienSwarm : public AActor
+class KRAKENTEST_API AKRAAlienSwarm : public AActor, public IKRATimelineInterface
 {
 	GENERATED_BODY()
 
 public:
 	AKRAAlienSwarm();
+	
+	virtual void Tick(float DeltaSeconds) override;
+	virtual void TickReverse(const FKRATimelineEvent& NextEvent, const FKRATimelineEvent& PreviousEvent, float Alpha) override;
+	virtual FKRATimelineEvent GetCurrentTimelineData() const override;
+	virtual void SetTickMode(EKRATimelineTickMode InTickMode) override;
+	virtual UKRATimelineComponent* GetTimelineComponent() const override;
 
 protected:
 	UFUNCTION()
@@ -30,13 +44,17 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	virtual void Tick(float DeltaSeconds) override;
+	void CreateAlien(FVector2D Coordinate) { CreateAlien(Coordinate.X, Coordinate.Y); }
+	void CreateAlien(int32 Column, int32 Row);
 
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* BorderCollision;
 
 	UPROPERTY(VisibleAnywhere)
 	class UKRAFireComponent* FireComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	class UKRATimelineComponent* TimelineComponent;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> AlienClass;
@@ -64,5 +82,10 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	FVector CurrentDirection = FVector();
+
+	UPROPERTY(Transient)
+	FVector SwarmLocalHalfSize = FVector::ZeroVector;
+
+	FTimerHandle FiringHandle;
 
 };
