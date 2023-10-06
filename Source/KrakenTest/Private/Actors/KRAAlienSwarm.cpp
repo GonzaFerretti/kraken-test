@@ -106,6 +106,8 @@ FKRATimelineEvent AKRAAlienSwarm::GetCurrentTimelineData() const
 
 void AKRAAlienSwarm::SetTickMode(EKRATimelineTickMode InTickMode)
 {
+	IKRATimelineInterface::SetTickMode(InTickMode);
+	
 	switch (InTickMode)
 	{
 	case EKRATimelineTickMode::Forward:

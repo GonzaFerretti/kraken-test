@@ -3,5 +3,9 @@
 
 #include "Interfaces/KRATimelineInterface.h"
 
+#include "Components/KRATimelineComponent.h"
 
-// Add default functionality here for any IKRATimelineInterface functions that are not pure virtual.
+void IKRATimelineInterface::SetTickMode(EKRATimelineTickMode InTickMode)
+{
+	GetTimelineComponent()->SetTickMode(InTickMode);
+}

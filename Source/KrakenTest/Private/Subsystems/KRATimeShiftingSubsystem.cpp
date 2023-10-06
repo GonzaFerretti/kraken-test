@@ -22,14 +22,14 @@ void UKRATimeShiftingSubsystem::SetEnemyDilation(float InDilation)
 
 void UKRATimeShiftingSubsystem::UpdateTimeDilationForActor(AActor* Actor)
 {
-	UKRATimelineComponent* TimelineComponent = Cast<IKRATimelineInterface>(Actor)->GetTimelineComponent();
+	IKRATimelineInterface* TimelineInterface = Cast<IKRATimelineInterface>(Actor);
 	if (EnemyDilation >= 0.0f)
 	{
 		Actor->CustomTimeDilation = EnemyDilation;
-		TimelineComponent->SetTickMode(EKRATimelineTickMode::Forward);
+		TimelineInterface->SetTickMode(EKRATimelineTickMode::Forward);
 	}
 	else
 	{
-		TimelineComponent->SetTickMode(EKRATimelineTickMode::Reverse);
+		TimelineInterface->SetTickMode(EKRATimelineTickMode::Reverse);
 	}
 }

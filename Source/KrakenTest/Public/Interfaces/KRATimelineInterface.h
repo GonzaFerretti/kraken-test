@@ -25,7 +25,7 @@ class KRAKENTEST_API IKRATimelineInterface
 
 public:
 	virtual struct FKRATimelineEvent GetCurrentTimelineData() const = 0;
-	virtual void SetTickMode(EKRATimelineTickMode InTickMode) = 0;
+	virtual void SetTickMode(EKRATimelineTickMode InTickMode);
 	virtual void TickReverse(const FKRATimelineEvent& NextEvent, const FKRATimelineEvent& PreviousEvent, float Alpha) = 0;
 
 	virtual class UKRATimelineComponent* GetTimelineComponent() const = 0;

@@ -82,8 +82,6 @@ void UKRATimelineComponent::SetTickMode(EKRATimelineTickMode TickMode)
 			PrimaryComponentTick.TickInterval = 0;
 			LastRewindStartTime = GetWorld()->GetTimeSeconds();
 		}
-
-		TimelineOwner->SetTickMode(TickMode);
 	}
 }
 
