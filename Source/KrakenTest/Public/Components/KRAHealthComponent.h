@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 #pragma once
 
@@ -6,7 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "KRAHealthComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FKRAOnDamageReceived, int32, CurrentHealth, int32, PreviousHealth, int32, MaxHealth);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FKRAOnHealthChanged, int32, CurrentHealth, int32, PreviousHealth, int32, MaxHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FKRAOnHealthDropToZero);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -20,8 +20,16 @@ public:
 
 	void BeginPlay() override;
 
+	void SetHealth(int32 InHealth);
+
+	UFUNCTION(BlueprintPure)
+	int32 GetHealth() const;
+
 	UPROPERTY(BlueprintAssignable)
-	FKRAOnDamageReceived OnDamageReceived;
+	FKRAOnHealthChanged OnDamageReceived;
+
+	UPROPERTY(BlueprintAssignable)
+	FKRAOnHealthChanged OnHealthModified;
 
 	UPROPERTY(BlueprintAssignable)
 	FKRAOnHealthDropToZero OnHealthDropToZero;

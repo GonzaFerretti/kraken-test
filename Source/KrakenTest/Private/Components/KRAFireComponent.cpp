@@ -1,7 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 
 #include "Components/KRAFireComponent.h"
+
+#include "Subsystems/KRATimeShiftingSubsystem.h"
 
 bool UKRAFireComponent::CanFire() const
 {
@@ -20,11 +22,19 @@ bool UKRAFireComponent::CanFire() const
 	return true;
 }
 
-void UKRAFireComponent::Fire(const FTransform& FireTransform)
+void UKRAFireComponent::Fire(const FTransform& FireTransform, bool bShouldBeRewindable)
 {
 	if (CanFire())
 	{
-		LastTimeShot = GetWorld()->GetTimeSeconds();	
-		CurrentProjectile = GetWorld()->SpawnActor(ProjectileClass, &FireTransform);
+		LastTimeShot = GetWorld()->GetTimeSeconds();
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn; 
+		CurrentProjectile = GetWorld()->SpawnActor<AKRAProjectile>(ProjectileClass, FireTransform);
+		ensure(CurrentProjectile);
+		if (bShouldBeRewindable)
+		{
+			GetWorld()->GetSubsystem<UKRATimeShiftingSubsystem>()->AddTimelineOwner(CurrentProjectile);
+		}
 	}
 }

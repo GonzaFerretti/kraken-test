@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 
 #include "Components/KRAHealthComponent.h"
@@ -25,4 +25,19 @@ void UKRAHealthComponent::BeginPlay()
 	Super::BeginPlay();
 
 	Health = MaxHealth;
+}
+
+void UKRAHealthComponent::SetHealth(int32 InHealth)
+{
+	const int32 PreviousHealth = Health;
+	if (PreviousHealth != InHealth)
+	{
+		Health = InHealth;
+		OnHealthModified.Broadcast(Health, PreviousHealth, MaxHealth);
+	}
+}
+
+int32 UKRAHealthComponent::GetHealth() const
+{
+	return Health;
 }

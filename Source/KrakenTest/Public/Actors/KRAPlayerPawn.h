@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 #pragma once
 
@@ -7,6 +7,8 @@
 #include "GameFramework/Pawn.h"
 #include "Interfaces/KRADamageableInterface.h"
 #include "KRAPlayerPawn.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FKRAOnCrystalCountChanged, int32, NewCount, int32, PreviousCount);
 
 UCLASS()
 class KRAKENTEST_API AKRAPlayerPawn : public APawn, public IKRADamageableInterface
@@ -22,6 +24,15 @@ public:
 	
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
+	UFUNCTION(BlueprintPure)
+	int32 GetCrystalCount() const { return CrystalCount; }
+
+	bool TryConsumeCrystals(int32 Count);
+	void SetCrystalCount(int32 Count);
+
+	UPROPERTY(BlueprintAssignable)
+	FKRAOnCrystalCountChanged OnCrystalCountChanged;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -30,7 +41,7 @@ protected:
 	void MoveHorizontal(const FInputActionValue& InputActionValue);
 	
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnDamageReceived(int32 CurrentHealth, int32 PreviousHealth, int32 MaxHealth);
+	void OnHealthChanged(int32 CurrentHealth, int32 PreviousHealth, int32 MaxHealth);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	FTransform GetFireTransform() const;
@@ -62,9 +73,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	class UKRAHealthComponent* HealthComponent;
 	
-private:
-	friend class UKRACrystalAction;
-	
+private:	
 	UPROPERTY(Transient)
 	AActor* CurrentProjectile;
 

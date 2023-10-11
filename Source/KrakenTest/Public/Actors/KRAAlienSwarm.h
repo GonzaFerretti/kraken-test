@@ -1,17 +1,16 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/KRATimelineComponent.h"
 #include "GameFramework/Actor.h"
 #include "Interfaces/KRATimelineInterface.h"
 #include "KRAAlienSwarm.generated.h"
 
-struct FKRAAlienSwarmTimelineData : FKRATimelineEventData
-{
+struct FKRAAlienSwarmTimelineData : FKRATimelineActorEventData
+{	
 	TArray<FVector2d> AliveAlienCoordinates;
-	FVector Position;
+	FVector CurrentDirection;
 };
 
 UCLASS()
@@ -26,7 +25,7 @@ public:
 	virtual void TickReverse(const FKRATimelineEvent& NextEvent, const FKRATimelineEvent& PreviousEvent, float Alpha) override;
 	virtual FKRATimelineEvent GetCurrentTimelineData() const override;
 	virtual void SetTickMode(EKRATimelineTickMode InTickMode) override;
-	virtual UKRATimelineComponent* GetTimelineComponent() const override;
+	virtual EKRATimelineEndResponse GetTimelineEndResponse() override;
 
 protected:
 	UFUNCTION()
@@ -52,9 +51,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	class UKRAFireComponent* FireComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	class UKRATimelineComponent* TimelineComponent;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> AlienClass;
@@ -87,5 +83,5 @@ protected:
 	FVector SwarmLocalHalfSize = FVector::ZeroVector;
 
 	FTimerHandle FiringHandle;
-
+	FTimerHandle SidewallHitHandle;
 };

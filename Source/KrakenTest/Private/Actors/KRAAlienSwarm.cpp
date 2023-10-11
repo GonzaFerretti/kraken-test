@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 
 #include "Actors/KRAAlienSwarm.h"
@@ -7,6 +7,9 @@
 #include "Components/BoxComponent.h"
 #include "Components/KRAFireComponent.h"
 #include "Kismet/GameplayStatics.h"
+
+#include "Types/KRATimelineTypes.h"
+#include "Subsystems/KRATimeShiftingSubsystem.h"
 
 AKRAAlienSwarm::AKRAAlienSwarm()
 {
@@ -18,8 +21,6 @@ AKRAAlienSwarm::AKRAAlienSwarm()
 
 	BorderCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BorderCollision"));
 	BorderCollision->SetupAttachment(RootComponent);
-
-	TimelineComponent = CreateDefaultSubobject<UKRATimelineComponent>(TEXT("TimelineComponent"));
 }
 
 void AKRAAlienSwarm::UpdateSpeed()
@@ -84,8 +85,10 @@ void AKRAAlienSwarm::Fire()
 		const AActor* Alien = CurrentSwarm[FVector2D(Column, Row)];
 
 		const FTransform FireTransform(FVector::DownVector.ToOrientationRotator(), Alien->GetActorLocation(), FVector::One());
-		
-		FireComponent->Fire(FireTransform);
+		//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Green, FireTransform.Rotator().ToString());
+
+		constexpr bool bShouldBeRewindable = true;
+		FireComponent->Fire(FireTransform, bShouldBeRewindable);
 	}
 }
 
@@ -100,14 +103,13 @@ FKRATimelineEvent AKRAAlienSwarm::GetCurrentTimelineData() const
 	}
 
 	TimelineData.Position = GetActorLocation();
+	TimelineData.CurrentDirection = CurrentDirection;
 
 	return FKRATimelineEvent(TimelineData);
 }
 
 void AKRAAlienSwarm::SetTickMode(EKRATimelineTickMode InTickMode)
-{
-	IKRATimelineInterface::SetTickMode(InTickMode);
-	
+{	
 	switch (InTickMode)
 	{
 	case EKRATimelineTickMode::Forward:
@@ -117,14 +119,15 @@ void AKRAAlienSwarm::SetTickMode(EKRATimelineTickMode InTickMode)
 
 	case EKRATimelineTickMode::Reverse:
 		SetActorTickEnabled(false);
+		GetWorld()->GetTimerManager().ClearTimer(SidewallHitHandle);
 		GetWorld()->GetTimerManager().ClearTimer(FiringHandle);
 		break;
 	}
 }
 
-UKRATimelineComponent* AKRAAlienSwarm::GetTimelineComponent() const
+EKRATimelineEndResponse AKRAAlienSwarm::GetTimelineEndResponse()
 {
-	return TimelineComponent;
+	return EKRATimelineEndResponse::KeepInPlace;
 }
 
 void AKRAAlienSwarm::HandleAlienDestroyed(AActor* DestroyedActor)
@@ -143,11 +146,21 @@ void AKRAAlienSwarm::HandleAlienDestroyed(AActor* DestroyedActor)
 }
 
 void AKRAAlienSwarm::HandleOverlapWithSideWall(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
+{	
 	CurrentDirection *= -1;
 
 	const FVector OneRowLowerLocation = GetActorLocation() - FVector(0, 0, AlienDistance.Y);
 	SetActorLocation(OneRowLowerLocation);
+
+	BorderCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Small cooldown to avoid triggering multiple times in a row;
+	FTimerDelegate Delegate;
+	Delegate.BindWeakLambda(this, [this]()
+	{
+		BorderCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	});
+	GetWorldTimerManager().SetTimer(SidewallHitHandle, Delegate, 2.0f, false);
 
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, OtherActor->GetActorLabel());
 }
@@ -155,6 +168,8 @@ void AKRAAlienSwarm::HandleOverlapWithSideWall(UPrimitiveComponent* OverlappedCo
 void AKRAAlienSwarm::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetWorld()->GetSubsystem<UKRATimeShiftingSubsystem>()->AddTimelineOwner(this);
 
 	FActorSpawnParameters AlienSpawnParams;
 	AlienSpawnParams.Owner = this;
@@ -207,8 +222,10 @@ void AKRAAlienSwarm::TickReverse(const FKRATimelineEvent& NextEvent, const FKRAT
 	const FKRAAlienSwarmTimelineData* PreviousData = PreviousEvent.GetDataAs<FKRAAlienSwarmTimelineData>();
 	const FKRAAlienSwarmTimelineData* NextData = NextEvent.GetDataAs<FKRAAlienSwarmTimelineData>();
 	
-	const FVector Position = FMath::Lerp(PreviousData->Position, NextData->Position, 1 - Alpha);
+	const FVector Position = FMath::Lerp(PreviousData->Position, NextData->Position, Alpha);
 	SetActorLocation(Position);
+
+	CurrentDirection = NextData->CurrentDirection;
 
 	const bool bNextDataCreatesAliens = PreviousData->AliveAlienCoordinates.Num() != NextData->AliveAlienCoordinates.Num();
 	const bool bAliensNotCreatedYet = NextData->AliveAlienCoordinates.Num() != CurrentSwarm.Num();

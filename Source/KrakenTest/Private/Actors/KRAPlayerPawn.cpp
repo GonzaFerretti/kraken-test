@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 #include "Actors/KRAPlayerPawn.h"
 #include "EnhancedInputComponent.h"
@@ -28,7 +28,7 @@ void AKRAPlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	HealthComponent->OnDamageReceived.AddUniqueDynamic(this, &ThisClass::OnDamageReceived);
+	HealthComponent->OnDamageReceived.AddUniqueDynamic(this, &ThisClass::OnHealthChanged);
 }
 
 void AKRAPlayerPawn::MoveHorizontal(const FInputActionValue& InputActionValue)
@@ -73,8 +73,25 @@ void AKRAPlayerPawn::NotifyActorBeginOverlap(AActor* OtherActor)
 
 	if (OtherActor->IsA<AKRACrystalDrop>())
 	{
-		++CrystalCount;
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("%d"), CrystalCount));
+		SetCrystalCount(CrystalCount + 1);
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("%d"), CrystalCount));
+	}
+}
+
+bool AKRAPlayerPawn::TryConsumeCrystals(int32 Count)
+{
+	const bool bEnoughCrystals = CrystalCount - Count >= 0;
+	SetCrystalCount(CrystalCount - Count);
+	return bEnoughCrystals;
+}
+
+void AKRAPlayerPawn::SetCrystalCount(int32 Count)
+{
+	const int32 PreviousCount = CrystalCount;
+	CrystalCount = Count;
+	if (PreviousCount != CrystalCount)
+	{
+		OnCrystalCountChanged.Broadcast(CrystalCount, PreviousCount);
 	}
 }
 

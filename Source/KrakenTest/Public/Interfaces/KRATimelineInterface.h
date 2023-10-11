@@ -1,17 +1,18 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Types/KRATimelineTypes.h"
 #include "UObject/Interface.h"
 
 #include "KRATimelineInterface.generated.h"
 
-enum struct EKRATimelineTickMode
+enum class EKRATimelineEndResponse
 {
-	Forward,
-	Reverse,
-};
+	KeepInPlace,
+	Destroy,
+}; 
 
 UINTERFACE()
 class UKRATimelineInterface : public UInterface
@@ -25,8 +26,9 @@ class KRAKENTEST_API IKRATimelineInterface
 
 public:
 	virtual struct FKRATimelineEvent GetCurrentTimelineData() const = 0;
-	virtual void SetTickMode(EKRATimelineTickMode InTickMode);
+	virtual void SetTickMode(EKRATimelineTickMode InTickMode) { };
 	virtual void TickReverse(const FKRATimelineEvent& NextEvent, const FKRATimelineEvent& PreviousEvent, float Alpha) = 0;
-
-	virtual class UKRATimelineComponent* GetTimelineComponent() const = 0;
+	virtual EKRATimelineEndResponse GetTimelineEndResponse() { return EKRATimelineEndResponse::Destroy; }
+	
+	virtual void HandleTimelineRespawn(const FKRATimelineEvent& RespawnEvent) {};
 };

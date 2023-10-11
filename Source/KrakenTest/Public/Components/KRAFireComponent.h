@@ -1,8 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actors/KRAProjectile.h"
 #include "Components/ActorComponent.h"
 #include "KRAFireComponent.generated.h"
 
@@ -14,7 +15,7 @@ class KRAKENTEST_API UKRAFireComponent : public UActorComponent
 
 public:
 	UFUNCTION()
-	void Fire(const FTransform& FireTransform);
+	void Fire(const FTransform& FireTransform, bool bShouldBeRewindable = false);
 
 	bool CanFire() const;
 	
@@ -23,11 +24,11 @@ public:
 	
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AActor> ProjectileClass;
+	TSubclassOf<AKRAProjectile> ProjectileClass;
 
 private:
 	UPROPERTY(Transient)
-	AActor* CurrentProjectile;
+	AKRAProjectile* CurrentProjectile;
 
 	UPROPERTY(Transient)
 	float LastTimeShot = -1.0f;

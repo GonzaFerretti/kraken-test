@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 
 #include "Actions/KRACrystalAction.h"
@@ -14,10 +14,8 @@ void UKRACrystalAction::Initialize(UEnhancedInputComponent* InputComponent, AKRA
 
 void UKRACrystalAction::TryExecuteAction(const FInputActionValue& InputActionValue)
 {
-	if (Owner->CrystalCount >= CrystalCost)
+	if (Owner->TryConsumeCrystals(CrystalCost))
 	{
-		Owner->CrystalCount -= CrystalCost;
 		ExecuteAction();
 	}
-	// Add error feedback
 }

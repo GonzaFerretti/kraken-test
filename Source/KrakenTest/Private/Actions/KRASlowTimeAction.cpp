@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 
 #include "Actions/KRASlowTimeAction.h"
@@ -10,5 +10,5 @@ void UKRASlowTimeAction::ExecuteAction()
 	Super::ExecuteAction();
 
 	UKRATimeShiftingSubsystem* TimeShiftingSS = GetWorld()->GetSubsystem<UKRATimeShiftingSubsystem>();
-	TimeShiftingSS->SetEnemyDilation(TimeDilation);
+	TimeShiftingSS->SetTemporaryDilation(TimeDilation, Duration);
 }

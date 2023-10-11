@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Coded by Gonzalo Ferretti for the Kraken Creative Studios Technical Test
 
 #pragma once
 
@@ -27,6 +27,10 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	int CrystalCost;
+
+	/* Duration in seconds of our action */
+	UPROPERTY(EditAnywhere)
+	float Duration = 3.0f;
 
 	UPROPERTY(Transient)
 	TObjectPtr<AKRAPlayerPawn> Owner = nullptr; 
