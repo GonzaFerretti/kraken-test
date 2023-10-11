@@ -85,7 +85,6 @@ void AKRAAlienSwarm::Fire()
 		const AActor* Alien = CurrentSwarm[FVector2D(Column, Row)];
 
 		const FTransform FireTransform(FVector::DownVector.ToOrientationRotator(), Alien->GetActorLocation(), FVector::One());
-		//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Green, FireTransform.Rotator().ToString());
 
 		constexpr bool bShouldBeRewindable = true;
 		FireComponent->Fire(FireTransform, bShouldBeRewindable);
@@ -161,8 +160,6 @@ void AKRAAlienSwarm::HandleOverlapWithSideWall(UPrimitiveComponent* OverlappedCo
 		BorderCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	});
 	GetWorldTimerManager().SetTimer(SidewallHitHandle, Delegate, 2.0f, false);
-
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, OtherActor->GetActorLabel());
 }
 
 void AKRAAlienSwarm::BeginPlay()
@@ -198,14 +195,18 @@ void AKRAAlienSwarm::CreateAlien(int32 Column, int32 Row)
 	AlienSpawnParams.Owner = this;
 	
 	const FVector LocalPosition(0.0f, AlienDistance.X * Column, AlienDistance.Y * Row);
-	AKRAAlien* Alien = GetWorld()->SpawnActor<AKRAAlien>(AlienClass, FTransform(), AlienSpawnParams);
-	Alien->SetActorLabel(FString::Printf(TEXT("Alien(%d,%d)"), Column, Row));
-	CurrentSwarm.Add(FVector2D(Column, Row), Alien);
-	Alien->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
 	const FVector CenteredPosition = LocalPosition - SwarmLocalHalfSize;
-	Alien->SetActorRelativeLocation(CenteredPosition);
 
+	const FVector WorldPosition = GetTransform().TransformPosition(CenteredPosition);
+	
+	AKRAAlien* Alien = GetWorld()->SpawnActor<AKRAAlien>(AlienClass, WorldPosition, FRotator::ZeroRotator, AlienSpawnParams);
+#if WITH_EDITOR
+	Alien->SetActorLabel(FString::Printf(TEXT("Alien(%d,%d)"), Column, Row));
+#endif
+	CurrentSwarm.Add(FVector2D(Column, Row), Alien);
+
+	Alien->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	Alien->SetActorRelativeLocation(CenteredPosition, false, nullptr, ETeleportType::ResetPhysics);
 	Alien->OnDestroyed.AddUniqueDynamic(this, &AKRAAlienSwarm::HandleAlienDestroyed);
 }
 

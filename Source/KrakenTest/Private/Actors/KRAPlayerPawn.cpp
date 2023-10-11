@@ -74,14 +74,16 @@ void AKRAPlayerPawn::NotifyActorBeginOverlap(AActor* OtherActor)
 	if (OtherActor->IsA<AKRACrystalDrop>())
 	{
 		SetCrystalCount(CrystalCount + 1);
-		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("%d"), CrystalCount));
 	}
 }
 
 bool AKRAPlayerPawn::TryConsumeCrystals(int32 Count)
 {
 	const bool bEnoughCrystals = CrystalCount - Count >= 0;
-	SetCrystalCount(CrystalCount - Count);
+	if (bEnoughCrystals)
+	{
+		SetCrystalCount(CrystalCount - Count);
+	}
 	return bEnoughCrystals;
 }
 

@@ -18,8 +18,6 @@ void AKRAAlien::ApplyDamage(const FKRADamageEvent& DamageEvent)
 void AKRAAlien::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
-
-	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("Alien overlap something"));
 	
 	if (IKRADamageableInterface* Damageable = Cast<IKRADamageableInterface>(OtherActor))
 	{

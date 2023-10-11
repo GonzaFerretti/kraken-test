@@ -104,6 +104,7 @@ void UKRATimeShiftingSubsystem::Tick()
 			{
 				FActorSpawnParameters ActorSpawnParameters;
 				ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				ActorSpawnParameters.bDeferConstruction = true;
 				FTransform InitialTransform;
 				AActor* CreatedActor = GetWorld()->SpawnActor(ActorTimeline.Value.ActorClass, &InitialTransform, ActorSpawnParameters);
 
@@ -113,6 +114,7 @@ void UKRATimeShiftingSubsystem::Tick()
 					TimelineOwner = CreatedActor;
 					TimelineOwner->HandleTimelineRespawn(*NextEvent);
 					TimelineOwner->SetTickMode(EKRATimelineTickMode::Reverse);
+					CreatedActor->FinishSpawning(FTransform());
 				}
 				continue;
 			}
